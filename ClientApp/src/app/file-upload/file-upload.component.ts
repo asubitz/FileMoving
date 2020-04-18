@@ -46,7 +46,7 @@ export class FileUploadComponent implements OnInit {
   ngOnInit() {
     this.uploadForm = this.fb.group({
       document: [null, null],
-      type: [null, Validators.compose([Validators.required])],
+      // type: [null, Validators.compose([Validators.required])],
     });
   }
 }
