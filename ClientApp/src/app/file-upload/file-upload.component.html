@@ -42,10 +42,10 @@
       <button
         mat-raised-button
         color="accent"
-        [disabled]="!uploadForm.valid"
+        [disabled]="uploader.queue?.length <= 0"
         type="submit"
       >
-        Upload Data
+        Move Files
       </button>
     </mat-card-content>
   </form>
