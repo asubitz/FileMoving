@@ -2,42 +2,44 @@
   <form [formGroup]="uploadForm" (ngSubmit)="uploadSubmit()">
     <mat-card-content>
       <br />
-      <input
-        formControlName="document"
-        type="file"
-        ng2FileSelect
-        accept=".*"
-        [uploader]="uploader"
-        multiple
-      /><br />
       <br />
       <div class="drop-zone">
         <div ng2FileDrop [uploader]="uploader" class="drop-zone">
           Drag and drop files to upload
         </div>
       </div>
-      <table>
+      <br />
+      <h1 id="tableLabel" *ngIf="uploader.queue?.length > 0">Files</h1>
+      <p *ngIf="uploader.queue?.length > 0">Files added for moving.</p>
+      <p *ngIf="uploader.queue?.length <= 0"><em>No files added...</em></p>
+      <table
+        class="table table-striped"
+        aria-labelledby="tableLabel"
+        *ngIf="uploader.queue?.length > 0"
+      >
         <thead>
           <tr>
-            <th *ngIf="uploader.queue?.length > 0"  width="90%">
-              File Name
-            </th>
-            <th *ngIf="uploader.queue?.length > 0" width="10%">
-              Remove
-            </th>
+            <th>Filename</th>
+            <th>Remove</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let item of uploader.queue">
-            <th width="90%">
-              {{ item.file.name }}({{ item.file.size / 1000000 }} MB)
-            </th>
-            <th class="text-center" width="10%">
-              <mat-icon (click)="item.remove()">delete</mat-icon>
-            </th>
+            <td>
+              <div id="name">
+                Found {{ item.file.name }} (size:
+                {{ item.file.size / 1000000 }} MB)
+              </div>
+            </td>
+            <td>
+              <div id="remove">
+                <a href="#" title="remove"><mat-icon (click)="item.remove()">delete</mat-icon></a>
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
+
       <br />
       <button
         mat-raised-button

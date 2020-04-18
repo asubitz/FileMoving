@@ -1,5 +1,16 @@
 .drop-zone{
   min-height: 40px;
-  max-width: 200px;
+  max-width: auto;
   border: 1px solid grey;
+  text-align: center;
+}
+
+#name{
+  min-width: 600px;
+  max-width: 600px;
+}
+
+#remove{
+  min-width: 50px;
+  max-width: 50px;
 }

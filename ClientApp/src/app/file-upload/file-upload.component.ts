@@ -19,7 +19,7 @@ export class FileUploadComponent implements OnInit {
   constructor(private fb: FormBuilder, private http: HttpClient) {}
 
   uploadSubmit() {
-    console.log('click submit ')
+    console.log("click submit ");
     for (var i = 0; i < this.uploader.queue.length; i++) {
       let fileItem = this.uploader.queue[i]._file;
       if (fileItem.size > 10000000) {
