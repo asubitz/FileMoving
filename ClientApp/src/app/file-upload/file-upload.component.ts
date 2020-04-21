@@ -40,7 +40,7 @@ export class FileUploadComponent implements OnInit {
       return;
     }
 
-   this.uploader.queue.sort((a, b) => a.file.size - b.file.size);
+   this.uploader.queue.sort((a, b) => b.file.size - a.file.size);
 
     for (let i = 0; i < this.uploader.queue.length; i++) {
       const data = new FormData();

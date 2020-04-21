@@ -1,11 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FileMoving.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using System;
-using System.IO;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace FileMoving.Controllers
@@ -14,13 +11,11 @@ namespace FileMoving.Controllers
     [Route("[controller]")]
     public class UploadController : ControllerBase
     {
-        private readonly ILogger<UploadController> _logger;
-        private readonly IConfiguration _configuration;
+        private readonly IFileSavingService _fileSavingService;
 
-        public UploadController(ILogger<UploadController> logger, IConfiguration configuration)
+        public UploadController(IFileSavingService fileSavingService)
         {
-            _logger = logger;
-            _configuration = configuration;
+            _fileSavingService = fileSavingService;
         }
 
         [HttpPost, DisableRequestSizeLimit]
@@ -28,20 +23,11 @@ namespace FileMoving.Controllers
         {
             try
             {
-           
-
-                var file = Request.Form.Files.FirstOrDefault();
-
+                IFormFile file = Request.Form.Files.FirstOrDefault();
 
                 if (file != null && file.Length > 0)
                 {
-                    string moveLocation = _configuration.GetSection("MoveLocation").Value;
-                    var fileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
-                    var fullPath = Path.Combine(moveLocation, fileName);
-
-                    CreateFolderIfNotExists(moveLocation);
-
-                    await CreateFileFromStreamAsync(fullPath, file);
+                    await _fileSavingService.Save(file);
 
                     return Ok();
                 }
@@ -55,26 +41,5 @@ namespace FileMoving.Controllers
                 return StatusCode(500, $"Internal server error: {ex}");
             }
         }
-
-        private static async Task CreateFileFromStreamAsync(string fullPath, IFormFile file)
-        {
-            await using var stream = new FileStream(fullPath, FileMode.Create);
-            await file.CopyToAsync(stream);
-            
-            // equivalent with ^^^
-            //await using (var stream = new FileStream(fullPath, FileMode.Create))
-            //{
-            //    await file.CopyToAsync(stream);
-            //}
-        }
-
-        private static void CreateFolderIfNotExists(string moveLocation)
-        {
-            if (!System.IO.Directory.Exists(moveLocation))
-            {
-                System.IO.Directory.CreateDirectory(moveLocation);
-            }
-        }
     }
-
 }

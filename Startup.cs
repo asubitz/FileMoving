@@ -1,3 +1,5 @@
+using FileMoving.Services;
+using FileMoving.Services.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Features;
@@ -32,6 +34,8 @@ namespace FileMoving
                 o.MultipartBodyLengthLimit = int.MaxValue;
                 o.MemoryBufferThreshold = int.MaxValue;
             });
+
+            services.AddTransient<IFileSavingService, FileSavingService>(); 
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
