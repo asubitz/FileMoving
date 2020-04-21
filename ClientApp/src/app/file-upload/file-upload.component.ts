@@ -1,53 +1,98 @@
-import { Component, OnInit } from "@angular/core";
-import { FormBuilder, FormGroup, Validators } from "@angular/forms";
-import { FileUploader } from "ng2-file-upload";
-import { Observable } from "rxjs";
-import { HttpClient } from "@angular/common/http";
+import { Component, OnInit, Inject } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FileUploader } from 'ng2-file-upload';
+import {
+  HttpClient,
+  HttpEventType,
+  HttpErrorResponse,
+} from '@angular/common/http';
 
 @Component({
-  selector: "app-file-upload",
-  templateUrl: "./file-upload.component.html",
-  styleUrls: ["./file-upload.component.css"],
+  selector: 'app-file-upload',
+  templateUrl: './file-upload.component.html',
+  styleUrls: ['./file-upload.component.css'],
 })
 export class FileUploadComponent implements OnInit {
   uploadForm: FormGroup;
+  baseUrl: string;
+  public uploadProgresses: Array<number> = new Array<number>();
+  public movingStatus: Array<number> = new Array<number>();
+  public filesMessage: string;
+  public showProgress = false;
 
   public uploader: FileUploader = new FileUploader({
     isHTML5: true,
   });
-  title: string = "File Upload";
-  constructor(private fb: FormBuilder, private http: HttpClient) {}
 
-  uploadSubmit() {
-    console.log("click submit ");
-    for (var i = 0; i < this.uploader.queue.length; i++) {
-      let fileItem = this.uploader.queue[i]._file;
-      if (fileItem.size > 10000000) {
-        alert("Each File should be less than 10 MB of size.");
-        return;
-      }
-    }
-    for (var j = 0; j < this.uploader.queue.length; j++) {
-      let data = new FormData();
-      let fileItem = this.uploader.queue[j]._file;
-      console.log(fileItem.name);
-      data.append("file", fileItem);
-      data.append("fileSeq", "seq" + j);
-      data.append("dataType", this.uploadForm.controls.type.value);
-      this.uploadFile(data).subscribe((data) => alert(data.message));
-    }
-    this.uploader.clearQueue();
+  title = 'File Upload';
+  constructor(
+    private fb: FormBuilder,
+    private http: HttpClient,
+    @Inject('BASE_URL') baseUrl: string
+  ) {
+    this.baseUrl = baseUrl;
+    this.filesMessage = 'No files added...';
   }
 
-  uploadFile(data: FormData): Observable<any> {
-    debugger;
-    return this.http.post<any>("http://localhost:8080/upload", data);
+  uploadSubmit() {
+
+    if (this.uploader.queue.length === 0) {
+      return;
+    }
+
+   this.uploader.queue.sort((a, b) => a.file.size - b.file.size);
+
+    for (let i = 0; i < this.uploader.queue.length; i++) {
+      const data = new FormData();
+      const fileItem = this.uploader.queue[i]._file;
+      data.append('file' + i, fileItem, fileItem.name);
+
+      this.showProgress = true;
+      this.http
+        .post(this.baseUrl + 'upload', data, {
+          reportProgress: true,
+          observe: 'events',
+        })
+        .subscribe((event) => {
+          if (event.type === HttpEventType.UploadProgress) {
+            this.uploadProgresses[i] = Math.round(
+              (100 * event.loaded) / event.total
+            );
+            this.movingStatus[i] = 2;
+          } else if (event.type === HttpEventType.Response) {
+            if (!event.status) {
+              this.movingStatus[i] = 2;
+            } else {
+              if (event.status === 200) {
+                this.movingStatus[i] = 1;
+              }
+            }
+          }
+        }),
+        (err: HttpErrorResponse) => {
+          if (err.error instanceof Error) {
+            // A client-side or network error occurred.
+            console.log('An error occurred:', err.error.message);
+            this.movingStatus[i] = 0;
+          } else {
+            // Backend returns unsuccessful response codes such as 404, 500 etc.
+            console.log('Backend returned status code: ', err.status);
+            console.log('Response body:', err.error);
+            this.movingStatus[i] = 0;
+          }
+        };
+    }
+  }
+
+  uploadFile($event) {
+    console.log($event.target.files[0]);
+    this.showProgress = false;
   }
 
   ngOnInit() {
     this.uploadForm = this.fb.group({
-      document: [null, null],
-      // type: [null, Validators.compose([Validators.required])],
+      document: [null, Validators.compose([Validators.required])],
     });
+
   }
 }

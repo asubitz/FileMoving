@@ -1,17 +1,34 @@
 <mat-card>
   <form [formGroup]="uploadForm" (ngSubmit)="uploadSubmit()">
     <mat-card-content>
-      <br />
-      <br />
-      <div class="drop-zone">
-        <div ng2FileDrop [uploader]="uploader" class="drop-zone">
-          Drag and drop files to upload
+      <br *ngIf="uploader.queue?.length <= 0" />
+      <div
+        class="drop-zone"
+        *ngIf="uploader.queue?.length <= 0"
+        style="border-radius: 5%;"
+      >
+        <div
+          ng2FileDrop
+          [uploader]="uploader"
+          class="drop-zone"
+          (change)="uploadFile($event)"
+        >
+          <div class="canvas_wrap">
+            <canvas id="original" width="1100" height="0"></canvas>
+            <div class="dropzone first">
+              <p>Drop files here :)</p>
+            </div>
+          </div>
         </div>
       </div>
+
       <br />
       <h1 id="tableLabel" *ngIf="uploader.queue?.length > 0">Files</h1>
       <p *ngIf="uploader.queue?.length > 0">Files added for moving.</p>
-      <p *ngIf="uploader.queue?.length <= 0"><em>No files added...</em></p>
+      <p *ngIf="uploader.queue?.length <= 0">
+        <em>No files added...</em>
+      </p>
+      <p *ngIf="showProgress"></p>
       <table
         class="table table-striped"
         aria-labelledby="tableLabel"
@@ -19,26 +36,65 @@
       >
         <thead>
           <tr>
-            <th>Filename</th>
-            <th>Remove</th>
+            <th>filename</th>
+            <th>size</th>
+            <th>remove</th>
+            <th>upload status</th>
+            <th>moving status</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let item of uploader.queue">
+          <tr *ngFor="let item of uploader.queue; let i = index">
             <td>
               <div id="name">
-                Found {{ item.file.name }} (size:
-                {{ item.file.size / 1000000 }} MB)
+                Found {{ item.file.name }}
+              </div>
+            </td>
+            <td>
+              <div class="name">
+                {{ item.file.size / 1000000 }} MB
               </div>
             </td>
             <td>
               <div id="remove">
-                <a href="#" title="remove"><mat-icon (click)="item.remove()">delete</mat-icon></a>
+                <a href="#" title="remove"
+                  ><mat-icon (click)="item.remove()">delete</mat-icon></a
+                >
+              </div>
+            </td>
+            <td>
+              <div class="col-md-4">
+                <span class="upload" *ngIf="uploadProgresses[i] > 0">
+                  {{ uploadProgresses[i] }}%
+                </span>
+              </div>
+            </td>
+            <td>
+              <div>
+                <span class="upload" *ngIf="movingStatus[i] === 1">
+                  finished
+                </span>
+                <span class="failed" *ngIf="movingStatus[i] === 0">
+                  failed
+                </span>
+                <span class="progress" *ngIf="movingStatus[i] === 2">
+                  in progress
+                </span>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
+
+      <!-- <br />
+      <div class="col-md-4">
+        <span class="upload" *ngIf="progress > 0">
+          {{progress}}%
+        </span>
+        <span class="upload" *ngIf="message">
+          {{message}}
+        </span>
+      </div> -->
 
       <br />
       <button
